@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-width: 300px; margin: 20px auto; }
+    .cell { background: #1e1e1e; border: 1px solid #333; padding: 15px 0; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .cell.selected { background: #0088cc; color: white; }
+    h1 { color: #0088cc; }
+  </style>
+</head>
+<body>
+  <h1>🎯 የቢንጎ ጨዋታ</h1>
+  <p>እንኳን ወደ ቢንጎ ጨዋታ በደህና መጡ!</p>
+  <div class="grid" id="board"></div>
+
+  <script>
+    const board = document.getElementById('board');
+    for (let i = 1; i <= 25; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerText = i;
+      cell.onclick = () => cell.classList.toggle('selected');
+      board.appendChild(cell);
+    }
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+    }
+  </script>
+</body>
+</html>
