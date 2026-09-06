@@ -8,8 +8,21 @@ const bot = new Telegraf(BOT_TOKEN);
 app.use(express.static('public'));
 app.use(express.json());
 
+// ተጠቃሚው /start ሲል ስልክ ቁጥሩን እንዲልክ መጠየቅ
 bot.start((ctx) => {
-    const welcomeMessage = `👋 እንኳን ወደ ሐገር ቢንጋ (Hager Bingo) በሰላም መጡ!\n\n💳 ቴሌብር (Telebirr) በመጠቀም አካውንትዎን ጫን አድርገው ጨዋታውን ይጀምሩ።`;
+    return ctx.reply(
+        `👋 እንኳን ወደ ሐገር ቢንጋ (Hager Bingo) በሰላም መጡ!\n\nለመቀጠል እባክዎ ከታች ያለውን አዝራር በመጫን ስልክ ቁጥርዎን ያጋሩ (Share Contact)።`,
+        Markup.keyboard([
+            [Markup.button.contactRequest('📱 ስልክ ቁጥር አጋራ (Share Contact)')]
+        ]).resize()
+    );
+});
+
+// ተጠቃሚው ስልክ ቁጥሩን ሼር ሲያደርግ ዋናውን ምናሌ (Menu) ማሳየት
+bot.on('contact', (ctx) => {
+    const phone = ctx.message.contact.phone_number;
+    
+    const welcomeMessage = `✅ ምዝገባዎ ተሳክቷል! ስልክ ቁጥርዎ: ${phone}\n\n💳 ቴሌብር (Telebirr) በመጠቀም አካውንትዎን ጫን አድርገው ጨዋታውን ይጀምሩ።`;
     
     return ctx.reply(
         welcomeMessage,
@@ -22,14 +35,17 @@ bot.start((ctx) => {
     );
 });
 
+// የ Deposit (ቴሌብር) ቁልፍ ሲጫን
 bot.action('deposit', (ctx) => {
     ctx.reply(`💳 **የቴሌብር ዲፖዚት (Telebirr Deposit)**\n\nቁጥር: \`0934664761\`\nስም: **ፍጡማ ኢብራሂም**\n\nእባክዎ ከላይ ባለው ቁጥር ብር ላኩና የትራንዛክሽን ቁጥሩን (Transaction ID) በዚህ ቦት ይላኩ።`);
 });
 
+// የ Balance ቁልፍ ሲጫን
 bot.action('balance', (ctx) => {
     ctx.reply(`💰 የአካውንትዎ ቀሪ ሂሳብ: **0.00 ብር**`);
 });
 
+// የ Instruction ቁልፍ ሲጫን
 bot.action('instruction', (ctx) => {
     ctx.reply(`📖 **እንዴት ይጫወታሉ?**\n1. ቴሌብር በመጠቀም አካውንትዎን ዎችን ያድርጉ።\n2. 'Play Bingo' በመጫን ሚኒ አፑን ይክፈቱ።\n3. 200 ቁጥሮች አውቶማቲክ እየተጠሩ ይጫወቱ!`);
 });
