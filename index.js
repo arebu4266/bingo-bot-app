@@ -27,7 +27,7 @@ bot.on('contact', (ctx) => {
     return ctx.reply(
         welcomeMessage,
         Markup.inlineKeyboard([
-            [Markup.button.webApp('🎮 Play Bingo', 'https://bingo-bot-app-production.up.railway.app')],
+            [Markup.button.webApp('🎮 Play Bingo', 'https://bingo-bot-app.onrender.com')],
             [Markup.button.callback('💰 Balance', 'balance'), Markup.button.callback('💲 Deposit (ቴሌብር)', 'deposit')],
             [Markup.button.callback('📖 Instruction', 'instruction'), Markup.button.callback('📞 Support', 'support')],
             [Markup.button.callback('💵 Withdraw', 'withdraw')]
