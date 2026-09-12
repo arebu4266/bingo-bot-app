@@ -238,23 +238,23 @@
     </div>
 
     <script>
-        // Synchronized Global Timer via localStorage
+        // Synchronized Master Seed and Timer via localStorage
         let serverStartTime = localStorage.getItem('bingo_start_time');
-        const gameDuration = 40; 
+        const gameDuration = 40; // 40 seconds selection phase
+        const callInterval = 3;  // Every 3 seconds a number is called
         
-        if (!serverStartTime || Date.now() - parseInt(serverStartTime) > 90000) {
+        if (!serverStartTime || Date.now() - parseInt(serverStartTime) > (45 + 75 * callInterval) * 1000) {
             serverStartTime = Date.now().toString();
             localStorage.setItem('bingo_start_time', serverStartTime);
+            localStorage.setItem('bingo_players', '0');
         }
 
         let selectedCartels = [];
         let playersCount = parseInt(localStorage.getItem('bingo_players') || '0');
-        let playWallet = 30; // የተጫዋች የሙከራ ባላንስ
-        let calledNumbers = [];
+        let playWallet = 30; 
         let gameStarted = false;
         const totalCards = 400;
 
-        // Update top bar initially
         document.getElementById('playerCount').innerText = playersCount;
         document.getElementById('derashPool').innerText = (playersCount * 8) + " ETB";
 
@@ -287,6 +287,22 @@
             card.G = getUniqueCols(46, 60, 5);
             card.O = getUniqueCols(61, 75, 5);
             return card;
+        }
+
+        // Generate Master Synchronized Shuffled Sequence (1 to 75) based on start time
+        function getMasterCalledNumbers(elapsedSeconds) {
+            let startTimestamp = parseInt(serverStartTime);
+            // Seeded shuffle for 1-75 numbers
+            let nums = Array.from({length: 75}, (_, i) => i + 1);
+            let seed = startTimestamp;
+            for (let i = nums.length - 1; i > 0; i--) {
+                seed = (seed * 9301 + 49297) % 233280;
+                let j = Math.floor((seed / 233280) * (i + 1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+            
+            let activeCallsCount = Math.max(0, Math.floor((elapsedSeconds - gameDuration) / callInterval));
+            return nums.slice(0, Math.min(75, activeCallsCount));
         }
 
         function selectCard(num) {
@@ -328,7 +344,7 @@
             }
         }
 
-        // Global Synchronized Timer Loop
+        // Global Synchronized Clock Loop
         let mainTimer = setInterval(() => {
             let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
             let timeLeft = gameDuration - elapsed;
@@ -340,6 +356,8 @@
             } else {
                 if (!gameStarted) {
                     startGame();
+                } else {
+                    updateActiveGame(elapsed);
                 }
             }
         }, 1000);
@@ -389,7 +407,6 @@
                 'O': [61, 75]
             };
 
-            // 1. Headers row
             for (let letter of ['B', 'I', 'N', 'G', 'O']) {
                 let hDiv = document.createElement('div');
                 hDiv.className = 'bingo-col-header';
@@ -397,7 +414,6 @@
                 boardGrid.appendChild(hDiv);
             }
 
-            // 2. Cells rows (1 to 15 downwards per column)
             for (let r = 0; r < 15; r++) {
                 for (let letter of ['B', 'I', 'N', 'G', 'O']) {
                     let num = columns[letter][0] + r;
@@ -421,7 +437,6 @@
             });
 
             let activeCard = generateBingoCard(selectedCartels[0]);
-            let cardNumbersList = [];
             for (let row = 0; row < 5; row++) {
                 ['B','I','N','G','O'].forEach(col => {
                     let val = activeCard[col][row];
@@ -429,50 +444,60 @@
                     acCell.className = val === 'FREE' ? 'bingo-cell free marked' : 'bingo-cell';
                     if(val !== 'FREE') {
                         acCell.id = `active-num-${val}`;
-                        cardNumbersList.push(val);
                     }
                     acCell.innerText = val;
                     activeTable.appendChild(acCell);
                 });
             }
 
-            // Game calling loop & Automatic Winner Detection
-            let allNums = Array.from({length: 75}, (_, i) => i + 1);
-            let gameLoop = setInterval(() => {
-                if (calledNumbers.length >= 75) {
-                    clearInterval(gameLoop);
-                    return;
-                }
-                let remaining = allNums.filter(n => !calledNumbers.includes(n));
-                let drawn = remaining[Math.floor(Math.random() * remaining.length)];
-                calledNumbers.push(drawn);
-
-                document.getElementById('currentCalledNum').innerText = drawn;
-                document.getElementById('calledCount').innerText = `${calledNumbers.length}/75`;
-
-                if (document.getElementById(`b-cell-${drawn}`)) {
-                    document.getElementById(`b-cell-${drawn}`).classList.add('called');
-                }
-                if (document.getElementById(`active-num-${drawn}`)) {
-                    document.getElementById(`active-num-${drawn}`).classList.add('marked');
-                }
-
-                // Automatic Winner Check
-                let cardWon = cardNumbersList.every(n => calledNumbers.includes(n));
-                if (cardWon) {
-                    clearInterval(gameLoop);
-                    triggerAutoWin(selectedCartels[0], totalDerash);
-                }
-            }, 3000);
+            let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
+            updateActiveGame(elapsed);
         }
 
-        // Manual BINGO button check (with False Bingo Penalty)
+        // Render called numbers accurately on any device based on shared timeline
+        function updateActiveGame(elapsed) {
+            let calledNumbers = getMasterCalledNumbers(elapsed);
+            if (calledNumbers.length > 0) {
+                let latestNum = calledNumbers[calledNumbers.length - 1];
+                document.getElementById('currentCalledNum').innerText = latestNum;
+                document.getElementById('calledCount').innerText = `${calledNumbers.length}/75`;
+
+                // Highlight called numbers on board and active card
+                calledNumbers.forEach(n => {
+                    let bCell = document.getElementById(`b-cell-${n}`);
+                    if (bCell) bCell.classList.add('called');
+
+                    let activeCell = document.getElementById(`active-num-${n}`);
+                    if (activeCell) activeCell.classList.add('marked');
+                });
+
+                // Check win condition automatically on sync
+                let activeCard = generateBingoCard(selectedCartels[0]);
+                let cardNumbersList = [];
+                for (let row = 0; row < 5; row++) {
+                    ['B','I','N','G','O'].forEach(col => {
+                        let val = activeCard[col][row];
+                        if(val !== 'FREE') cardNumbersList.push(val);
+                    });
+                }
+
+                let cardWon = cardNumbersList.every(n => calledNumbers.includes(n));
+                let totalDerash = playersCount * 8;
+                if (cardWon) {
+                    triggerAutoWin(selectedCartels[0], totalDerash);
+                }
+            }
+        }
+
         let disqualified = false;
         function checkManualBingo() {
             if (disqualified) {
                 alert('❌ ካርቴላዎ ቀደም ሲል ስለታሰረ (Disqualified) መጫወት አይችሉም!');
                 return;
             }
+
+            let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
+            let calledNumbers = getMasterCalledNumbers(elapsed);
 
             let activeCard = generateBingoCard(selectedCartels[0]);
             let cardNumbersList = [];
@@ -489,7 +514,6 @@
             if (cardWon) {
                 triggerAutoWin(selectedCartels[0], totalDerash);
             } else {
-                // False Bingo: Disqualify card, but DO NOT stop the game!
                 disqualified = true;
                 alert('⚠️ የተሳሳተ BINGO (False Bingo)! ካርቴላዎ ታስሯል (Disqualified)። ጨዋታው ግን ይቀጥላል!');
             }
