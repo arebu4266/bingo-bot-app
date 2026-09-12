@@ -11,17 +11,17 @@
             color: #ffffff;
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 8px;
             box-sizing: border-box;
         }
         
         .top-bar {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             background: #1e293b;
-            padding: 8px 12px;
+            padding: 6px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-size: 11px;
             align-items: center;
         }
@@ -29,32 +29,54 @@
 
         .game-container {
             display: flex;
-            gap: 10px;
-            height: calc(100vh - 80px);
+            gap: 8px;
+            height: calc(100vh - 75px);
         }
 
+        /* Left B-I-N-G-O Board */
         .left-board {
-            flex: 1.2;
+            flex: 1.3;
             background: #1e293b;
-            border-radius: 10px;
-            padding: 8px;
+            border-radius: 8px;
+            padding: 6px;
             overflow-y: auto;
             max-height: 85vh;
         }
-        .board-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+        .bingo-col-container {
+            display: flex;
+            flex-direction: column;
             gap: 4px;
         }
-        .board-cell {
-            background: #334155;
-            padding: 8px 2px;
+        .bingo-row-group {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        .col-letter {
+            background: #0284c7;
+            color: white;
+            font-weight: bold;
             font-size: 11px;
-            border-radius: 4px;
+            width: 18px;
+            padding: 4px 0;
             text-align: center;
+            border-radius: 3px;
+        }
+        .row-numbers {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            flex-grow: 1;
+        }
+        .board-num-cell {
+            background: #334155;
+            font-size: 9px;
+            padding: 5px 1px;
+            text-align: center;
+            border-radius: 2px;
             font-weight: bold;
         }
-        .board-cell.called {
+        .board-num-cell.called {
             background: #10b981;
             color: white;
         }
@@ -63,16 +85,16 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .selection-grid-container {
             background: #1e293b;
-            border-radius: 10px;
-            padding: 10px;
+            border-radius: 8px;
+            padding: 8px;
             flex-grow: 1;
             overflow-y: auto;
-            max-height: 55vh;
+            max-height: 52vh;
         }
         .sel-grid {
             display: grid;
@@ -81,7 +103,7 @@
         }
         .sel-cell {
             background: #334155;
-            padding: 8px 1px;
+            padding: 7px 1px;
             font-size: 11px;
             border-radius: 4px;
             text-align: center;
@@ -95,33 +117,31 @@
 
         .cartel-preview {
             background: #1e293b;
-            border-radius: 10px;
-            padding: 8px;
+            border-radius: 8px;
+            padding: 6px;
             text-align: center;
         }
         
-        /* B-I-N-G-O Table Styling */
         .bingo-table {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 3px;
-            margin-top: 5px;
+            margin-top: 4px;
         }
         .bingo-header {
             background: #0284c7;
             color: white;
-            font-size: 11px;
-            padding: 4px 0;
+            font-size: 10px;
+            padding: 3px 0;
             font-weight: bold;
-            border-radius: 3px;
+            border-radius: 2px;
         }
         .bingo-cell {
             background: #334155;
-            padding: 6px 2px;
+            padding: 5px 2px;
             font-size: 10px;
-            border-radius: 3px;
+            border-radius: 2px;
             font-weight: bold;
-            min-height: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -139,9 +159,9 @@
             background: #0284c7;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 9px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
@@ -149,59 +169,82 @@
         .timer-box {
             background: #f59e0b;
             color: #000;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
+        }
+
+        /* Winner Modal Popup */
+        #winnerModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #facc15;
+            max-width: 320px;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
-    <div class="top-bar" id="topHeader">
-        <div><div>GAME ID</div><div>DBE400</div></div>
-        <div><div>PLAYERS</div><div id="playerCount">412</div></div>
+    <div class="top-bar">
+        <div><div>PLAYERS</div><div id="playerCount">1</div></div>
         <div><div>BET</div><div>10 ETB</div></div>
-        <div><div>DERASH</div><div id="derashPool">3296</div></div>
+        <div><div>DERASH</div><div id="derashPool">8 ETB</div></div>
         <div class="timer-box" id="timerDisplay">40 s</div>
     </div>
 
     <div id="selectionView">
-        <div style="font-size: 12px; margin-bottom: 5px; color: #38bdf8;">ካርቴላ ይምረጡ (ከ 1 እስከ 400 - እስከ 3 ካርቴላ)</div>
+        <div style="font-size: 11px; margin-bottom: 4px; color: #38bdf8;">ካርቴላ ይምረጡ (ከ 1 እስከ 400 - እስከ 3)</div>
         <div class="selection-grid-container">
             <div class="sel-grid" id="selectionGrid"></div>
         </div>
         
-        <div class="cartel-preview" style="margin-top: 8px;">
-            <div id="cartelTitle" style="font-size: 11px; color: #94a3b8;">ካርቴላ # - (B-I-N-G-O)</div>
+        <div class="cartel-preview" style="margin-top: 6px;">
+            <div id="cartelTitle" style="font-size: 10px; color: #94a3b8;">ካርቴላ # -</div>
             <div class="bingo-table" id="previewTable"></div>
         </div>
 
-        <button class="btn" style="margin-top: 8px;" onclick="confirmCards()">ካርቴላ 🔒 🔒 🔒 (10 ብር)</button>
+        <button class="btn" style="margin-top: 6px;" onclick="confirmCards()">ካርቴላ 🔒 (10 ብር)</button>
     </div>
 
     <div id="gameView" class="game-container" style="display: none;">
         <div class="left-board">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: #38bdf8;">
-                <span>የተጠራው ቁጥር: <b id="currentCalledNum" style="color: #facc15; font-size: 16px;">-</b></span>
-                <span id="calledCount">Called: 0</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; color: #38bdf8;">
+                <span>የተጠራው: <b id="currentCalledNum" style="color: #facc15; font-size: 14px;">-</b></span>
+                <span id="calledCount">0/75</span>
             </div>
-            <div class="board-grid" id="mainBoardGrid"></div>
+            
+            <div class="bingo-col-container" id="bingoBoardContainer"></div>
         </div>
 
         <div class="right-panel">
-            <div style="background: #1e293b; padding: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                <span>AUTOMATIC</span>
-                <input type="checkbox" id="autoToggle" checked style="transform: scale(1.2);">
-            </div>
-
             <div class="cartel-preview" style="flex-grow: 1;">
-                <div id="activeCartelTitle" style="font-size: 12px; color: #facc15; font-weight: bold;">CARTEL #</div>
-                <div class="bingo-table" id="activeCartelTable" style="margin-top: 5px;"></div>
+                <div id="activeCartelTitle" style="font-size: 11px; color: #facc15; font-weight: bold;">CARTEL #</div>
+                <div class="bingo-table" id="activeCartelTable" style="margin-top: 4px;"></div>
             </div>
 
-            <button class="btn" style="background: #10b981;" onclick="checkBingo()">🎉 BINGO! (አሸነፍኩ)</button>
-            <div id="spectatorNotice" style="font-size: 11px; color: #f59e0b; text-align: center;"></div>
+            <button class="btn" style="background: #10b981;" onclick="declareBingo()">🎉 BINGO!</button>
+        </div>
+    </div>
+
+    <div id="winnerModal">
+        <div class="modal-content">
+            <h2 style="color: #facc15; margin-top: 0;">🏆 CONGRATULATIONS!</h2>
+            <p id="winnerMessage" style="font-size: 13px; line-height: 1.5;"></p>
+            <button class="btn" onclick="location.reload()" style="background: #10b981; margin-top: 10px;">አዲስ ጨዋታ ጀምር</button>
         </div>
     </div>
 
@@ -209,11 +252,12 @@
         let timeLeft = 40;
         let gameStarted = false;
         let selectedCartels = [];
-        let playWallet = 30; // የሙከራ ባላንስ
+        let playersCount = 1; // ተጫዋቾች ብዛት
+        let playWallet = 30;
         let calledNumbers = [];
-        const totalCards = 400; // 400 ካርቴላዎች
+        const totalCards = 400;
 
-        // Populate 400 Selection Grid
+        // Build Selection Grid
         const selGrid = document.getElementById('selectionGrid');
         for (let i = 1; i <= totalCards; i++) {
             let cell = document.createElement('div');
@@ -225,27 +269,22 @@
         }
 
         function generateBingoCard(seed) {
-            let card = {
-                B: [], I: [], N: [], G: [], O: []
-            };
+            let card = { B: [], I: [], N: [], G: [], O: [] };
             let rand = (min, max) => Math.floor(Math.abs(Math.sin(seed++) * 10000)) % (max - min + 1) + min;
-
             let getUniqueCols = (min, max, count) => {
                 let nums = [];
                 while(nums.length < count) {
                     let n = rand(min, max);
                     if(!nums.includes(n)) nums.push(n);
                 }
-                return nums;
+                return nums.sort((a,b)=>a-b);
             };
-
             card.B = getUniqueCols(1, 15, 5);
             card.I = getUniqueCols(16, 30, 5);
-            card.N = getUniqueCols(31, 45, 4); // 4 nums + Free
+            card.N = getUniqueCols(31, 45, 4);
             card.N.splice(2, 0, 'FREE');
             card.G = getUniqueCols(46, 60, 5);
             card.O = getUniqueCols(61, 75, 5);
-
             return card;
         }
 
@@ -267,18 +306,15 @@
         }
 
         function updatePreview(num) {
-            document.getElementById('cartelTitle').innerText = `ካርቴላ #${num} (B-I-N-G-O)`;
+            document.getElementById('cartelTitle').innerText = `ካርቴላ #${num}`;
             let previewTable = document.getElementById('previewTable');
             previewTable.innerHTML = '';
-
-            // Headers B I N G O
             ['B','I','N','G','O'].forEach(h => {
                 let th = document.createElement('div');
                 th.className = 'bingo-header';
                 th.innerText = h;
                 previewTable.appendChild(th);
             });
-
             let cardData = generateBingoCard(num);
             for (let row = 0; row < 5; row++) {
                 ['B','I','N','G','O'].forEach(col => {
@@ -308,10 +344,11 @@
             }
             let totalCost = selectedCartels.length * 10;
             if (playWallet < totalCost) {
-                alert(`❌ በቂ ባላንስ የለዎትም (Insufficient Balance)!\nያስፈለገው: ${totalCost} ብር\nያሎት: ${playWallet} ብር`);
+                alert(`❌ በቂ ባላንስ የለዎትም!\nያስፈለገው: ${totalCost} ብር`);
                 return;
             }
             playWallet -= totalCost;
+            playersCount += selectedCartels.length; // ተጫዋቾች ሲገቡ ይጨምራል
             startGame();
         }
 
@@ -324,22 +361,41 @@
             document.getElementById('gameView').style.display = 'flex';
             document.getElementById('timerDisplay').innerText = "InProgress";
 
-            if (selectedCartels.length === 0) {
-                document.getElementById('spectatorNotice').innerText = "👀 (እንደ ተመልካች ብቻ ተሳትፈዋል)";
-                selectedCartels = [1]; 
+            // Update Derash based on players count (8 ETB per player)
+            let totalDerash = playersCount * 8;
+            document.getElementById('derashPool').innerText = totalDerash + " ETB";
+            document.getElementById('playerCount').innerText = playersCount;
+
+            if (selectedCartels.length === 0) selectedCartels = [1];
+
+            // Build B-I-N-G-O Left Board Layout
+            let boardContainer = document.getElementById('bingoBoardContainer');
+            const ranges = { 'B': [1,15], 'I': [16,30], 'N': [31,45], 'G': [46,60], 'O': [61,75] };
+            
+            for (let [letter, range] of Object.entries(ranges)) {
+                let group = document.createElement('div');
+                group.className = 'bingo-row-group';
+                
+                let lDiv = document.createElement('div');
+                lDiv.className = 'col-letter';
+                lDiv.innerText = letter;
+                group.appendChild(lDiv);
+
+                let numsDiv = document.createElement('div');
+                numsDiv.className = 'row-numbers';
+
+                for (let n = range[0]; n <= range[1]; n++) {
+                    let cell = document.createElement('div');
+                    cell.className = 'board-num-cell';
+                    cell.id = `b-cell-${n}`;
+                    cell.innerText = n;
+                    numsDiv.appendChild(cell);
+                }
+                group.appendChild(numsDiv);
+                boardContainer.appendChild(group);
             }
 
-            // Main Board 1 to 75
-            let mainBoard = document.getElementById('mainBoardGrid');
-            for (let i = 1; i <= 75; i++) {
-                let bCell = document.createElement('div');
-                bCell.className = 'board-cell';
-                bCell.id = `b-cell-${i}`;
-                bCell.innerText = i;
-                mainBoard.appendChild(bCell);
-            }
-
-            // Active Cartel Table
+            // Build Active Cartel Table
             let activeTable = document.getElementById('activeCartelTable');
             document.getElementById('activeCartelTitle').innerText = `CARTEL #${selectedCartels[0]}`;
             
@@ -362,7 +418,7 @@
                 });
             }
 
-            // Game Loop
+            // Game calling loop
             let allNums = Array.from({length: 75}, (_, i) => i + 1);
             let gameLoop = setInterval(() => {
                 if (calledNumbers.length >= 75) {
@@ -374,7 +430,7 @@
                 calledNumbers.push(drawn);
 
                 document.getElementById('currentCalledNum').innerText = drawn;
-                document.getElementById('calledCount').innerText = `Called: ${calledNumbers.length}`;
+                document.getElementById('calledCount').innerText = `${calledNumbers.length}/75`;
 
                 if (document.getElementById(`b-cell-${drawn}`)) {
                     document.getElementById(`b-cell-${drawn}`).classList.add('called');
@@ -385,8 +441,10 @@
             }, 3000);
         }
 
-        function checkBingo() {
-            alert('🎉 BINGO የተረጋገጠ ጥያቄዎ ለአስተዳዳሪው ተልኳል!');
+        function declareBingo() {
+            let totalDerash = playersCount * 8;
+            document.getElementById('winnerMessage').innerHTML = `🎉 <b>Congra!</b><br><br>ካርቴላ ቁጥር <b>#${selectedCartels[0]}</b> ጨዋታውን በድል ዘግቷል!<br><br>💰 ያሸነፉት ሽልማት: <b>${totalDerash} ብር</b>`;
+            document.getElementById('winnerModal').style.display = 'flex';
         }
     </script>
 </body>
