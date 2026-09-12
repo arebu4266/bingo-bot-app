@@ -33,7 +33,7 @@
             height: calc(100vh - 75px);
         }
 
-        /* Left B-I-N-G-O Vertical Board Layout */
+        /* Left Vertical B-I-N-G-O Board (Strictly Downwards) */
         .left-board {
             flex: 1.4;
             background: #1e293b;
@@ -56,15 +56,10 @@
             padding: 4px 0;
             border-radius: 3px;
         }
-        .bingo-col-cells {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
         .board-num-cell {
             background: #334155;
-            font-size: 10px;
-            padding: 6px 1px;
+            font-size: 11px;
+            padding: 7px 1px;
             text-align: center;
             border-radius: 3px;
             font-weight: bold;
@@ -193,9 +188,9 @@
 <body>
 
     <div class="top-bar">
-        <div><div>PLAYERS</div><div id="playerCount">1</div></div>
+        <div><div>PLAYERS</div><div id="playerCount">0</div></div>
         <div><div>BET</div><div>10 ETB</div></div>
-        <div><div>DERASH</div><div id="derashPool">8 ETB</div></div>
+        <div><div>DERASH</div><div id="derashPool">0 ETB</div></div>
         <div class="timer-box" id="timerDisplay">40 s</div>
     </div>
 
@@ -229,35 +224,39 @@
                 <div class="bingo-table" id="activeCartelTable" style="margin-top: 4px;"></div>
             </div>
 
+            <button class="btn" style="background: #10b981;" onclick="checkManualBingo()">🎉 BINGO!</button>
             <div id="spectatorNotice" style="font-size: 11px; color: #f59e0b; text-align: center;"></div>
         </div>
     </div>
 
     <div id="winnerModal">
         <div class="modal-content">
-            <h2 style="color: #facc15; margin-top: 0;">🏆 BINGO WINNER!</h2>
+            <h2 id="modalTitle" style="color: #facc15; margin-top: 0;">🏆 BINGO WINNER!</h2>
             <p id="winnerMessage" style="font-size: 13px; line-height: 1.5;"></p>
             <button class="btn" onclick="resetNewGame()" style="background: #10b981; margin-top: 10px;">ቀጣይ ጨዋታ ጀምር</button>
         </div>
     </div>
 
     <script>
-        // Use localStorage to synchronize game timer and state across different phones/tabs
+        // Synchronized Global Timer via localStorage
         let serverStartTime = localStorage.getItem('bingo_start_time');
-        const gameDuration = 40; // 40 seconds selection phase
+        const gameDuration = 40; 
         
         if (!serverStartTime || Date.now() - parseInt(serverStartTime) > 90000) {
             serverStartTime = Date.now().toString();
             localStorage.setItem('bingo_start_time', serverStartTime);
-            localStorage.setItem('bingo_called', JSON.stringify([]));
         }
 
         let selectedCartels = [];
-        let playersCount = 1;
-        let playWallet = 30;
+        let playersCount = parseInt(localStorage.getItem('bingo_players') || '0');
+        let playWallet = 30; // የተጫዋች የሙከራ ባላንስ
         let calledNumbers = [];
         let gameStarted = false;
         const totalCards = 400;
+
+        // Update top bar initially
+        document.getElementById('playerCount').innerText = playersCount;
+        document.getElementById('derashPool').innerText = (playersCount * 8) + " ETB";
 
         // Build Selection Grid
         const selGrid = document.getElementById('selectionGrid');
@@ -329,7 +328,7 @@
             }
         }
 
-        // Global Synchronized Timer Loop (works across multiple phones)
+        // Global Synchronized Timer Loop
         let mainTimer = setInterval(() => {
             let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
             let timeLeft = gameDuration - elapsed;
@@ -347,16 +346,19 @@
 
         function confirmCards() {
             if (gameStarted) return;
+            
             let totalCost = selectedCartels.length * 10;
             if (totalCost > 0 && playWallet < totalCost) {
-                alert(`❌ በቂ ባላንስ የለዎትም!\nያስፈለገው: ${totalCost} ብር`);
+                alert(`❌ በቂ ባላንስ የለዎትም (Insufficient Balance)!\nያስፈለገው: ${totalCost} ብር\nያሎት: ${playWallet} ብር`);
                 return;
             }
+
             if (totalCost > 0) {
                 playWallet -= totalCost;
                 playersCount += selectedCartels.length;
+                localStorage.setItem('bingo_players', playersCount);
             }
-            // If timer expired or user confirms, start game immediately
+
             startGame();
         }
 
@@ -377,7 +379,7 @@
                 selectedCartels = [1]; 
             }
 
-            // Build Vertical B-I-N-G-O Left Board Grid (B:1-15, I:16-30, etc. downwards)
+            // Build Vertical B-I-N-G-O Left Board Grid (Strictly Downwards)
             let boardGrid = document.getElementById('bingoBoardGrid');
             const columns = {
                 'B': [1, 15],
@@ -395,7 +397,7 @@
                 boardGrid.appendChild(hDiv);
             }
 
-            // 2. Cells rows (1 to 15 downwards)
+            // 2. Cells rows (1 to 15 downwards per column)
             for (let r = 0; r < 15; r++) {
                 for (let letter of ['B', 'I', 'N', 'G', 'O']) {
                     let num = columns[letter][0] + r;
@@ -455,7 +457,7 @@
                     document.getElementById(`active-num-${drawn}`).classList.add('marked');
                 }
 
-                // Automatic Winner Check: if all non-FREE numbers of the card are called
+                // Automatic Winner Check
                 let cardWon = cardNumbersList.every(n => calledNumbers.includes(n));
                 if (cardWon) {
                     clearInterval(gameLoop);
@@ -464,13 +466,43 @@
             }, 3000);
         }
 
+        // Manual BINGO button check (with False Bingo Penalty)
+        let disqualified = false;
+        function checkManualBingo() {
+            if (disqualified) {
+                alert('❌ ካርቴላዎ ቀደም ሲል ስለታሰረ (Disqualified) መጫወት አይችሉም!');
+                return;
+            }
+
+            let activeCard = generateBingoCard(selectedCartels[0]);
+            let cardNumbersList = [];
+            for (let row = 0; row < 5; row++) {
+                ['B','I','N','G','O'].forEach(col => {
+                    let val = activeCard[col][row];
+                    if(val !== 'FREE') cardNumbersList.push(val);
+                });
+            }
+
+            let cardWon = cardNumbersList.every(n => calledNumbers.includes(n));
+            let totalDerash = playersCount * 8;
+
+            if (cardWon) {
+                triggerAutoWin(selectedCartels[0], totalDerash);
+            } else {
+                // False Bingo: Disqualify card, but DO NOT stop the game!
+                disqualified = true;
+                alert('⚠️ የተሳሳተ BINGO (False Bingo)! ካርቴላዎ ታስሯል (Disqualified)። ጨዋታው ግን ይቀጥላል!');
+            }
+        }
+
         function triggerAutoWin(cartelNum, totalDerash) {
-            document.getElementById('winnerMessage').innerHTML = `🎉 <b>ኮንግራ! (Congra)</b><br><br>ካርቴላ ቁጥር <b>#${cartelNum}</b> ጨዋታውን በራስ-ሰር (አውቶማቲክ) ዘግቷል!<br><br>💰 ያሸነፉት ደራሽ: <b>${totalDerash} ብር</b>`;
+            document.getElementById('winnerMessage').innerHTML = `🎉 <b>ኮንግራ! (Congra)</b><br><br>ካርቴላ ቁጥር <b>#${cartelNum}</b> ጨዋታውን በድል ዘግቷል!<br><br>💰 ያሸነፉት ደራሽ: <b>${totalDerash} ብር</b>`;
             document.getElementById('winnerModal').style.display = 'flex';
         }
 
         function resetNewGame() {
             localStorage.removeItem('bingo_start_time');
+            localStorage.removeItem('bingo_players');
             location.reload();
         }
     </script>
