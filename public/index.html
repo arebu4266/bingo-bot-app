@@ -33,47 +33,40 @@
             height: calc(100vh - 75px);
         }
 
-        /* Left B-I-N-G-O Board */
+        /* Left B-I-N-G-O Vertical Board Layout */
         .left-board {
-            flex: 1.3;
+            flex: 1.4;
             background: #1e293b;
             border-radius: 8px;
             padding: 6px;
             overflow-y: auto;
             max-height: 85vh;
         }
-        .bingo-col-container {
-            display: flex;
-            flex-direction: column;
+        .bingo-board-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
             gap: 4px;
+            text-align: center;
         }
-        .bingo-row-group {
-            display: flex;
-            gap: 3px;
-            align-items: center;
-        }
-        .col-letter {
+        .bingo-col-header {
             background: #0284c7;
             color: white;
             font-weight: bold;
             font-size: 11px;
-            width: 18px;
             padding: 4px 0;
-            text-align: center;
             border-radius: 3px;
         }
-        .row-numbers {
-            display: grid;
-            grid-template-columns: repeat(15, 1fr);
-            gap: 2px;
-            flex-grow: 1;
+        .bingo-col-cells {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
         }
         .board-num-cell {
             background: #334155;
-            font-size: 9px;
-            padding: 5px 1px;
+            font-size: 10px;
+            padding: 6px 1px;
             text-align: center;
-            border-radius: 2px;
+            border-radius: 3px;
             font-weight: bold;
         }
         .board-num-cell.called {
@@ -227,7 +220,7 @@
                 <span id="calledCount">0/75</span>
             </div>
             
-            <div class="bingo-col-container" id="bingoBoardContainer"></div>
+            <div class="bingo-board-grid" id="bingoBoardGrid"></div>
         </div>
 
         <div class="right-panel">
@@ -236,25 +229,34 @@
                 <div class="bingo-table" id="activeCartelTable" style="margin-top: 4px;"></div>
             </div>
 
-            <button class="btn" style="background: #10b981;" onclick="declareBingo()">🎉 BINGO!</button>
+            <div id="spectatorNotice" style="font-size: 11px; color: #f59e0b; text-align: center;"></div>
         </div>
     </div>
 
     <div id="winnerModal">
         <div class="modal-content">
-            <h2 style="color: #facc15; margin-top: 0;">🏆 CONGRATULATIONS!</h2>
+            <h2 style="color: #facc15; margin-top: 0;">🏆 BINGO WINNER!</h2>
             <p id="winnerMessage" style="font-size: 13px; line-height: 1.5;"></p>
-            <button class="btn" onclick="location.reload()" style="background: #10b981; margin-top: 10px;">አዲስ ጨዋታ ጀምር</button>
+            <button class="btn" onclick="resetNewGame()" style="background: #10b981; margin-top: 10px;">ቀጣይ ጨዋታ ጀምር</button>
         </div>
     </div>
 
     <script>
-        let timeLeft = 40;
-        let gameStarted = false;
+        // Use localStorage to synchronize game timer and state across different phones/tabs
+        let serverStartTime = localStorage.getItem('bingo_start_time');
+        const gameDuration = 40; // 40 seconds selection phase
+        
+        if (!serverStartTime || Date.now() - parseInt(serverStartTime) > 90000) {
+            serverStartTime = Date.now().toString();
+            localStorage.setItem('bingo_start_time', serverStartTime);
+            localStorage.setItem('bingo_called', JSON.stringify([]));
+        }
+
         let selectedCartels = [];
-        let playersCount = 1; // ተጫዋቾች ብዛት
+        let playersCount = 1;
         let playWallet = 30;
         let calledNumbers = [];
+        let gameStarted = false;
         const totalCards = 400;
 
         // Build Selection Grid
@@ -327,72 +329,82 @@
             }
         }
 
-        let timer = setInterval(() => {
-            if (!gameStarted) {
-                timeLeft--;
-                document.getElementById('timerDisplay').innerText = timeLeft + " s";
-                if (timeLeft <= 0) {
+        // Global Synchronized Timer Loop (works across multiple phones)
+        let mainTimer = setInterval(() => {
+            let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
+            let timeLeft = gameDuration - elapsed;
+
+            if (timeLeft > 0) {
+                if (!gameStarted) {
+                    document.getElementById('timerDisplay').innerText = timeLeft + " s";
+                }
+            } else {
+                if (!gameStarted) {
                     startGame();
                 }
             }
         }, 1000);
 
         function confirmCards() {
-            if (selectedCartels.length === 0) {
-                alert('እባክዎን ቢያንስ 1 ካርቴላ ይምረጡ!');
-                return;
-            }
+            if (gameStarted) return;
             let totalCost = selectedCartels.length * 10;
-            if (playWallet < totalCost) {
+            if (totalCost > 0 && playWallet < totalCost) {
                 alert(`❌ በቂ ባላንስ የለዎትም!\nያስፈለገው: ${totalCost} ብር`);
                 return;
             }
-            playWallet -= totalCost;
-            playersCount += selectedCartels.length; // ተጫዋቾች ሲገቡ ይጨምራል
+            if (totalCost > 0) {
+                playWallet -= totalCost;
+                playersCount += selectedCartels.length;
+            }
+            // If timer expired or user confirms, start game immediately
             startGame();
         }
 
         function startGame() {
             if (gameStarted) return;
             gameStarted = true;
-            clearInterval(timer);
 
             document.getElementById('selectionView').style.display = 'none';
             document.getElementById('gameView').style.display = 'flex';
             document.getElementById('timerDisplay').innerText = "InProgress";
 
-            // Update Derash based on players count (8 ETB per player)
             let totalDerash = playersCount * 8;
             document.getElementById('derashPool').innerText = totalDerash + " ETB";
             document.getElementById('playerCount').innerText = playersCount;
 
-            if (selectedCartels.length === 0) selectedCartels = [1];
+            if (selectedCartels.length === 0) {
+                document.getElementById('spectatorNotice').innerText = "👀 (እንደ ተመልካች ብቻ ተሳትፈዋል)";
+                selectedCartels = [1]; 
+            }
 
-            // Build B-I-N-G-O Left Board Layout
-            let boardContainer = document.getElementById('bingoBoardContainer');
-            const ranges = { 'B': [1,15], 'I': [16,30], 'N': [31,45], 'G': [46,60], 'O': [61,75] };
-            
-            for (let [letter, range] of Object.entries(ranges)) {
-                let group = document.createElement('div');
-                group.className = 'bingo-row-group';
-                
-                let lDiv = document.createElement('div');
-                lDiv.className = 'col-letter';
-                lDiv.innerText = letter;
-                group.appendChild(lDiv);
+            // Build Vertical B-I-N-G-O Left Board Grid (B:1-15, I:16-30, etc. downwards)
+            let boardGrid = document.getElementById('bingoBoardGrid');
+            const columns = {
+                'B': [1, 15],
+                'I': [16, 30],
+                'N': [31, 45],
+                'G': [46, 60],
+                'O': [61, 75]
+            };
 
-                let numsDiv = document.createElement('div');
-                numsDiv.className = 'row-numbers';
+            // 1. Headers row
+            for (let letter of ['B', 'I', 'N', 'G', 'O']) {
+                let hDiv = document.createElement('div');
+                hDiv.className = 'bingo-col-header';
+                hDiv.innerText = letter;
+                boardGrid.appendChild(hDiv);
+            }
 
-                for (let n = range[0]; n <= range[1]; n++) {
+            // 2. Cells rows (1 to 15 downwards)
+            for (let r = 0; r < 15; r++) {
+                for (let letter of ['B', 'I', 'N', 'G', 'O']) {
+                    let num = columns[letter][0] + r;
                     let cell = document.createElement('div');
                     cell.className = 'board-num-cell';
-                    cell.id = `b-cell-${n}`;
-                    cell.innerText = n;
-                    numsDiv.appendChild(cell);
+                    cell.id = `b-cell-${num}`;
+                    cell.innerText = num;
+                    boardGrid.appendChild(cell);
                 }
-                group.appendChild(numsDiv);
-                boardContainer.appendChild(group);
             }
 
             // Build Active Cartel Table
@@ -407,18 +419,22 @@
             });
 
             let activeCard = generateBingoCard(selectedCartels[0]);
+            let cardNumbersList = [];
             for (let row = 0; row < 5; row++) {
                 ['B','I','N','G','O'].forEach(col => {
                     let val = activeCard[col][row];
                     let acCell = document.createElement('div');
                     acCell.className = val === 'FREE' ? 'bingo-cell free marked' : 'bingo-cell';
-                    if(val !== 'FREE') acCell.id = `active-num-${val}`;
+                    if(val !== 'FREE') {
+                        acCell.id = `active-num-${val}`;
+                        cardNumbersList.push(val);
+                    }
                     acCell.innerText = val;
                     activeTable.appendChild(acCell);
                 });
             }
 
-            // Game calling loop
+            // Game calling loop & Automatic Winner Detection
             let allNums = Array.from({length: 75}, (_, i) => i + 1);
             let gameLoop = setInterval(() => {
                 if (calledNumbers.length >= 75) {
@@ -438,13 +454,24 @@
                 if (document.getElementById(`active-num-${drawn}`)) {
                     document.getElementById(`active-num-${drawn}`).classList.add('marked');
                 }
+
+                // Automatic Winner Check: if all non-FREE numbers of the card are called
+                let cardWon = cardNumbersList.every(n => calledNumbers.includes(n));
+                if (cardWon) {
+                    clearInterval(gameLoop);
+                    triggerAutoWin(selectedCartels[0], totalDerash);
+                }
             }, 3000);
         }
 
-        function declareBingo() {
-            let totalDerash = playersCount * 8;
-            document.getElementById('winnerMessage').innerHTML = `🎉 <b>Congra!</b><br><br>ካርቴላ ቁጥር <b>#${selectedCartels[0]}</b> ጨዋታውን በድል ዘግቷል!<br><br>💰 ያሸነፉት ሽልማት: <b>${totalDerash} ብር</b>`;
+        function triggerAutoWin(cartelNum, totalDerash) {
+            document.getElementById('winnerMessage').innerHTML = `🎉 <b>ኮንግራ! (Congra)</b><br><br>ካርቴላ ቁጥር <b>#${cartelNum}</b> ጨዋታውን በራስ-ሰር (አውቶማቲክ) ዘግቷል!<br><br>💰 ያሸነፉት ደራሽ: <b>${totalDerash} ብር</b>`;
             document.getElementById('winnerModal').style.display = 'flex';
+        }
+
+        function resetNewGame() {
+            localStorage.removeItem('bingo_start_time');
+            location.reload();
         }
     </script>
 </body>
