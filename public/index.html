@@ -15,7 +15,6 @@
             box-sizing: border-box;
         }
         
-        /* Header Info Bar */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -28,14 +27,12 @@
         }
         .top-bar div div:last-child { font-weight: bold; color: #facc15; }
 
-        /* Main Game Layout (Side-by-Side when game starts) */
         .game-container {
             display: flex;
             gap: 10px;
             height: calc(100vh - 80px);
         }
 
-        /* Left side: Called Numbers Board */
         .left-board {
             flex: 1.2;
             background: #1e293b;
@@ -62,7 +59,6 @@
             color: white;
         }
 
-        /* Right side: Cartel & Controls */
         .right-panel {
             flex: 1;
             display: flex;
@@ -70,14 +66,13 @@
             gap: 10px;
         }
 
-        /* Selection Grid for 40s phase */
         .selection-grid-container {
             background: #1e293b;
             border-radius: 10px;
             padding: 10px;
             flex-grow: 1;
             overflow-y: auto;
-            max-height: 60vh;
+            max-height: 55vh;
         }
         .sel-grid {
             display: grid;
@@ -98,32 +93,48 @@
             color: white;
         }
 
-        /* Cartel Preview Box (Like in video) */
         .cartel-preview {
             background: #1e293b;
             border-radius: 10px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
         }
-        .cartel-table {
+        
+        /* B-I-N-G-O Table Styling */
+        .bingo-table {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 3px;
             margin-top: 5px;
         }
-        .cartel-cell {
+        .bingo-header {
+            background: #0284c7;
+            color: white;
+            font-size: 11px;
+            padding: 4px 0;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+        .bingo-cell {
             background: #334155;
             padding: 6px 2px;
-            font-size: 11px;
-            border-radius: 4px;
+            font-size: 10px;
+            border-radius: 3px;
             font-weight: bold;
+            min-height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .cartel-cell.marked {
+        .bingo-cell.marked {
             background: #10b981;
             color: white;
         }
+        .bingo-cell.free {
+            background: #f59e0b;
+            color: #000;
+        }
 
-        /* Buttons & Timer */
         .btn {
             background: #0284c7;
             color: white;
@@ -148,25 +159,25 @@
 <body>
 
     <div class="top-bar" id="topHeader">
-        <div><div>GAME ID</div><div>DBEBR2Z6</div></div>
-        <div><div>PLAYERS</div><div id="playerCount">372</div></div>
+        <div><div>GAME ID</div><div>DBE400</div></div>
+        <div><div>PLAYERS</div><div id="playerCount">412</div></div>
         <div><div>BET</div><div>10 ETB</div></div>
-        <div><div>DERASH</div><div id="derashPool">2976</div></div>
+        <div><div>DERASH</div><div id="derashPool">3296</div></div>
         <div class="timer-box" id="timerDisplay">40 s</div>
     </div>
 
     <div id="selectionView">
-        <div style="font-size: 13px; margin-bottom: 5px; color: #38bdf8;">ካርቴላ ይምረጡ (እስከ 3 ካርቴላ)</div>
+        <div style="font-size: 12px; margin-bottom: 5px; color: #38bdf8;">ካርቴላ ይምረጡ (ከ 1 እስከ 400 - እስከ 3 ካርቴላ)</div>
         <div class="selection-grid-container">
             <div class="sel-grid" id="selectionGrid"></div>
         </div>
         
-        <div class="cartel-preview" style="margin-top: 10px;">
-            <div id="cartelTitle" style="font-size: 11px; color: #94a3b8;">ካርቴላ # -</div>
-            <div class="cartel-table" id="previewTable"></div>
+        <div class="cartel-preview" style="margin-top: 8px;">
+            <div id="cartelTitle" style="font-size: 11px; color: #94a3b8;">ካርቴላ # - (B-I-N-G-O)</div>
+            <div class="bingo-table" id="previewTable"></div>
         </div>
 
-        <button class="btn" style="margin-top: 10px;" onclick="confirmCards()">ካርቴላ 🔒 🔒 🔒</button>
+        <button class="btn" style="margin-top: 8px;" onclick="confirmCards()">ካርቴላ 🔒 🔒 🔒 (10 ብር)</button>
     </div>
 
     <div id="gameView" class="game-container" style="display: none;">
@@ -185,10 +196,11 @@
             </div>
 
             <div class="cartel-preview" style="flex-grow: 1;">
-                <div id="activeCartelTitle" style="font-size: 12px; color: #facc15; font-weight: bold;">CARTEL #39</div>
-                <div class="cartel-table" id="activeCartelTable" style="margin-top: 10px;"></div>
+                <div id="activeCartelTitle" style="font-size: 12px; color: #facc15; font-weight: bold;">CARTEL #</div>
+                <div class="bingo-table" id="activeCartelTable" style="margin-top: 5px;"></div>
             </div>
 
+            <button class="btn" style="background: #10b981;" onclick="checkBingo()">🎉 BINGO! (አሸነፍኩ)</button>
             <div id="spectatorNotice" style="font-size: 11px; color: #f59e0b; text-align: center;"></div>
         </div>
     </div>
@@ -199,9 +211,9 @@
         let selectedCartels = [];
         let playWallet = 30; // የሙከራ ባላንስ
         let calledNumbers = [];
-        const totalCards = 104;
+        const totalCards = 400; // 400 ካርቴላዎች
 
-        // Populate Selection Grid
+        // Populate 400 Selection Grid
         const selGrid = document.getElementById('selectionGrid');
         for (let i = 1; i <= totalCards; i++) {
             let cell = document.createElement('div');
@@ -210,6 +222,31 @@
             cell.innerText = i;
             cell.onclick = () => selectCard(i);
             selGrid.appendChild(cell);
+        }
+
+        function generateBingoCard(seed) {
+            let card = {
+                B: [], I: [], N: [], G: [], O: []
+            };
+            let rand = (min, max) => Math.floor(Math.abs(Math.sin(seed++) * 10000)) % (max - min + 1) + min;
+
+            let getUniqueCols = (min, max, count) => {
+                let nums = [];
+                while(nums.length < count) {
+                    let n = rand(min, max);
+                    if(!nums.includes(n)) nums.push(n);
+                }
+                return nums;
+            };
+
+            card.B = getUniqueCols(1, 15, 5);
+            card.I = getUniqueCols(16, 30, 5);
+            card.N = getUniqueCols(31, 45, 4); // 4 nums + Free
+            card.N.splice(2, 0, 'FREE');
+            card.G = getUniqueCols(46, 60, 5);
+            card.O = getUniqueCols(61, 75, 5);
+
+            return card;
         }
 
         function selectCard(num) {
@@ -230,19 +267,30 @@
         }
 
         function updatePreview(num) {
-            document.getElementById('cartelTitle').innerText = `CARTEL #${num}`;
+            document.getElementById('cartelTitle').innerText = `ካርቴላ #${num} (B-I-N-G-O)`;
             let previewTable = document.getElementById('previewTable');
             previewTable.innerHTML = '';
-            // Sample preview numbers for the card
-            for (let j = 0; j < 25; j++) {
-                let cCell = document.createElement('div');
-                cCell.className = 'cartel-cell';
-                cCell.innerText = (num * 3 + j) % 75 + 1;
-                previewTable.appendChild(cCell);
+
+            // Headers B I N G O
+            ['B','I','N','G','O'].forEach(h => {
+                let th = document.createElement('div');
+                th.className = 'bingo-header';
+                th.innerText = h;
+                previewTable.appendChild(th);
+            });
+
+            let cardData = generateBingoCard(num);
+            for (let row = 0; row < 5; row++) {
+                ['B','I','N','G','O'].forEach(col => {
+                    let cCell = document.createElement('div');
+                    let val = cardData[col][row];
+                    cCell.className = val === 'FREE' ? 'bingo-cell free' : 'bingo-cell';
+                    cCell.innerText = val;
+                    previewTable.appendChild(cCell);
+                });
             }
         }
 
-        // 40s Timer
         let timer = setInterval(() => {
             if (!gameStarted) {
                 timeLeft--;
@@ -278,10 +326,10 @@
 
             if (selectedCartels.length === 0) {
                 document.getElementById('spectatorNotice').innerText = "👀 (እንደ ተመልካች ብቻ ተሳትፈዋል)";
-                selectedCartels = [39]; // Default sample cartel for spectator view
+                selectedCartels = [1]; 
             }
 
-            // Build Main Board (1 to 75)
+            // Main Board 1 to 75
             let mainBoard = document.getElementById('mainBoardGrid');
             for (let i = 1; i <= 75; i++) {
                 let bCell = document.createElement('div');
@@ -291,20 +339,30 @@
                 mainBoard.appendChild(bCell);
             }
 
-            // Build Active Cartel Table
-            let activeCartelTable = document.getElementById('activeCartelTable');
-            let sampleCartelNums = [];
-            for (let j = 0; j < 25; j++) {
-                let val = (selectedCartels[0] * 2 + j * 3) % 75 + 1;
-                sampleCartelNums.push(val);
-                let acCell = document.createElement('div');
-                acCell.className = 'cartel-cell';
-                acCell.id = `cartel-item-${val}`;
-                acCell.innerText = val;
-                activeCartelTable.appendChild(acCell);
+            // Active Cartel Table
+            let activeTable = document.getElementById('activeCartelTable');
+            document.getElementById('activeCartelTitle').innerText = `CARTEL #${selectedCartels[0]}`;
+            
+            ['B','I','N','G','O'].forEach(h => {
+                let th = document.createElement('div');
+                th.className = 'bingo-header';
+                th.innerText = h;
+                activeTable.appendChild(th);
+            });
+
+            let activeCard = generateBingoCard(selectedCartels[0]);
+            for (let row = 0; row < 5; row++) {
+                ['B','I','N','G','O'].forEach(col => {
+                    let val = activeCard[col][row];
+                    let acCell = document.createElement('div');
+                    acCell.className = val === 'FREE' ? 'bingo-cell free marked' : 'bingo-cell';
+                    if(val !== 'FREE') acCell.id = `active-num-${val}`;
+                    acCell.innerText = val;
+                    activeTable.appendChild(acCell);
+                });
             }
 
-            // Game calling numbers loop
+            // Game Loop
             let allNums = Array.from({length: 75}, (_, i) => i + 1);
             let gameLoop = setInterval(() => {
                 if (calledNumbers.length >= 75) {
@@ -321,10 +379,14 @@
                 if (document.getElementById(`b-cell-${drawn}`)) {
                     document.getElementById(`b-cell-${drawn}`).classList.add('called');
                 }
-                if (document.getElementById(`cartel-item-${drawn}`)) {
-                    document.getElementById(`cartel-item-${drawn}`).classList.add('marked');
+                if (document.getElementById(`active-num-${drawn}`)) {
+                    document.getElementById(`active-num-${drawn}`).classList.add('marked');
                 }
             }, 3000);
+        }
+
+        function checkBingo() {
+            alert('🎉 BINGO የተረጋገጠ ጥያቄዎ ለአስተዳዳሪው ተልኳል!');
         }
     </script>
 </body>
