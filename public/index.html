@@ -11,8 +11,9 @@
             color: #ffffff;
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 8px;
+            padding: 6px;
             box-sizing: border-box;
+            overflow-x: hidden;
         }
         
         .top-bar {
@@ -21,14 +22,13 @@
             background: #1e293b;
             padding: 6px;
             border-radius: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-size: 11px;
             align-items: center;
             position: relative;
         }
         .top-bar div div:last-child { font-weight: bold; color: #facc15; }
 
-        /* Telegram Style Clean Menu Button */
         .menu-btn {
             background: #0284c7;
             color: white;
@@ -38,12 +38,8 @@
             cursor: pointer;
             font-size: 11px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
 
-        /* Modern Telegram Popup Menu */
         #menuDropdown {
             display: none;
             position: absolute;
@@ -55,7 +51,6 @@
             width: 200px;
             z-index: 300;
             box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-            overflow: hidden;
         }
         .menu-item {
             padding: 12px 14px;
@@ -72,13 +67,14 @@
 
         .game-container {
             display: flex;
-            gap: 8px;
-            height: calc(100vh - 75px);
+            gap: 6px;
+            height: calc(100vh - 70px);
+            box-sizing: border-box;
         }
 
         /* Left Vertical B-I-N-G-O Board */
         .left-board {
-            flex: 1.4;
+            flex: 1.2;
             background: #1e293b;
             border-radius: 8px;
             padding: 6px;
@@ -88,21 +84,21 @@
         .bingo-board-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
+            gap: 3px;
             text-align: center;
         }
         .bingo-col-header {
             background: #0284c7;
             color: white;
             font-weight: bold;
-            font-size: 11px;
-            padding: 4px 0;
+            font-size: 10px;
+            padding: 3px 0;
             border-radius: 3px;
         }
         .board-num-cell {
             background: #334155;
-            font-size: 11px;
-            padding: 7px 1px;
+            font-size: 10px;
+            padding: 5px 1px;
             text-align: center;
             border-radius: 3px;
             font-weight: bold;
@@ -112,13 +108,15 @@
             color: white;
         }
 
+        /* Right Panel for Active Cards */
         .right-panel {
-            flex: 1;
+            flex: 1.3;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             overflow-y: auto;
             max-height: 85vh;
+            padding-bottom: 10px;
         }
 
         .selection-grid-container {
@@ -153,34 +151,36 @@
             border-radius: 8px;
             padding: 6px;
             text-align: center;
+            border: 1px solid #334155;
         }
         
         .bingo-table {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 3px;
-            margin-top: 4px;
+            gap: 2px;
+            margin-top: 3px;
         }
         .bingo-header {
             background: #0284c7;
             color: white;
-            font-size: 9px;
-            padding: 3px 0;
+            font-size: 8px;
+            padding: 2px 0;
             font-weight: bold;
             border-radius: 2px;
         }
         .bingo-cell {
             background: #334155;
-            padding: 4px 1px;
-            font-size: 9px;
+            padding: 3px 1px;
+            font-size: 8px;
             border-radius: 2px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
+            height: 16px;
         }
         .bingo-cell.marked {
-            background: #10b981;
+            background: #10b981 !important;
             color: white;
         }
         .bingo-cell.free {
@@ -192,9 +192,9 @@
             background: #0284c7;
             color: white;
             border: none;
-            padding: 9px;
+            padding: 8px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
@@ -241,7 +241,6 @@
             font-size: 12px;
         }
 
-        /* Winner Modal */
         #winnerModal {
             display: none;
             position: fixed;
@@ -292,15 +291,14 @@
     <div id="gameView" class="game-container" style="display: none;">
         <div class="left-board">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; color: #38bdf8;">
-                <span>የተጠራው: <b id="currentCalledNum" style="color: #facc15; font-size: 14px;">-</b></span>
+                <span>የተጠራው: <b id="currentCalledNum" style="color: #facc15; font-size: 13px;">-</b></span>
                 <span id="calledCount">0/75</span>
             </div>
-            
             <div class="bingo-board-grid" id="bingoBoardGrid"></div>
         </div>
 
         <div class="right-panel" id="activeCardsPanel">
-            <button class="btn" style="background: #10b981; margin-bottom: 4px;" onclick="checkManualBingo()">🎉 BINGO!</button>
+            <button class="btn" style="background: #10b981; margin-bottom: 4px; order: 10;" onclick="checkManualBingo()">🎉 BINGO!</button>
         </div>
     </div>
 
@@ -462,4 +460,217 @@
                     let cCell = document.createElement('div');
                     let val = cardData[col][row];
                     cCell.className = val === 'FREE' ? 'bingo-cell free' : 'bingo-cell';
-                    cCell.innerText = val
+                    cCell.innerText = val;
+                    previewTable.appendChild(cCell);
+                });
+            }
+        }
+
+        let mainTimer = setInterval(() => {
+            let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
+            let timeLeft = gameDuration - elapsed;
+
+            if (timeLeft > 0) {
+                if (!gameStarted) {
+                    document.getElementById('timerDisplay').innerText = timeLeft + " s";
+                }
+            } else {
+                if (!gameStarted) {
+                    startGame();
+                } else {
+                    updateActiveGame(elapsed);
+                }
+            }
+        }, 1000);
+
+        function confirmCards() {
+            if (gameStarted) return;
+
+            if (selectedCartels.length === 0) {
+                alert('እባክዎን ቢያንስ 1 ካርቴላ ይምረጡ!');
+                return;
+            }
+            
+            let totalCost = selectedCartels.length * 10;
+            if (playWallet < totalCost) {
+                alert(`❌ ዋሌትዎ ውስጥ በቂ ብር የለም!\nያስፈለገው: ${totalCost} ብር\nያሎት: ${playWallet} ብር\n\nእባክዎን መጀመሪያ 'ዲፖዚት' ያድርጉ!`);
+                openDepositModal();
+                return;
+            }
+
+            playWallet -= totalCost;
+            localStorage.setItem('bingo_wallet', playWallet);
+            document.getElementById('walletDisplay').innerText = playWallet + " ብር ➕";
+
+            playersCount += selectedCartels.length;
+            localStorage.setItem('bingo_players', playersCount);
+
+            startGame();
+        }
+
+        function startGame() {
+            if (gameStarted) return;
+            gameStarted = true;
+
+            document.getElementById('selectionView').style.display = 'none';
+            document.getElementById('gameView').style.display = 'flex';
+            document.getElementById('timerDisplay').innerText = "InProgress";
+
+            let totalDerash = playersCount * 8;
+            document.getElementById('derashPool').innerText = totalDerash + " ETB";
+
+            if (selectedCartels.length === 0) {
+                selectedCartels = [1]; 
+            }
+
+            // Build Left Board
+            let boardGrid = document.getElementById('bingoBoardGrid');
+            const columns = { 'B': [1, 15], 'I': [16, 30], 'N': [31, 45], 'G': [46, 60], 'O': [61, 75] };
+
+            for (let letter of ['B', 'I', 'N', 'G', 'O']) {
+                let hDiv = document.createElement('div');
+                hDiv.className = 'bingo-col-header';
+                hDiv.innerText = letter;
+                boardGrid.appendChild(hDiv);
+            }
+
+            for (let r = 0; r < 15; r++) {
+                for (let letter of ['B', 'I', 'N', 'G', 'O']) {
+                    let num = columns[letter][0] + r;
+                    let cell = document.createElement('div');
+                    cell.className = 'board-num-cell';
+                    cell.id = `b-cell-${num}`;
+                    cell.innerText = num;
+                    boardGrid.appendChild(cell);
+                }
+            }
+
+            // Build Active Cards Separately in Right Panel
+            let activePanel = document.getElementById('activeCardsPanel');
+            
+            selectedCartels.forEach((cardNum, index) => {
+                let cardWrapper = document.createElement('div');
+                cardWrapper.className = 'cartel-preview';
+                cardWrapper.style.marginBottom = '4px';
+
+                let title = document.createElement('div');
+                title.style.fontSize = '10px';
+                title.style.color = '#facc15';
+                title.style.fontWeight = 'bold';
+                title.innerText = `ካርቴላ #${cardNum} (${index+1})`;
+                cardWrapper.appendChild(title);
+
+                let table = document.createElement('div');
+                table.className = 'bingo-table';
+                
+                ['B','I','N','G','O'].forEach(h => {
+                    let th = document.createElement('div');
+                    th.className = 'bingo-header';
+                    th.innerText = h;
+                    table.appendChild(th);
+                });
+
+                let activeCard = generateBingoCard(cardNum);
+                for (let row = 0; row < 5; row++) {
+                    ['B','I','N','G','O'].forEach(col => {
+                        let val = activeCard[col][row];
+                        let acCell = document.createElement('div');
+                        acCell.className = val === 'FREE' ? 'bingo-cell free marked' : 'bingo-cell';
+                        if(val !== 'FREE') {
+                            acCell.id = `card-${cardNum}-num-${val}`;
+                        }
+                        acCell.innerText = val;
+                        table.appendChild(acCell);
+                    });
+                }
+                cardWrapper.appendChild(table);
+                activePanel.insertBefore(cardWrapper, activePanel.firstChild);
+            });
+
+            let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
+            updateActiveGame(elapsed);
+        }
+
+        function updateActiveGame(elapsed) {
+            let calledNumbers = getMasterCalledNumbers(elapsed);
+            if (calledNumbers.length > 0) {
+                let latestNum = calledNumbers[calledNumbers.length - 1];
+                document.getElementById('currentCalledNum').innerText = latestNum;
+                document.getElementById('calledCount').innerText = `${calledNumbers.length}/75`;
+
+                calledNumbers.forEach(n => {
+                    let bCell = document.getElementById(`b-cell-${n}`);
+                    if (bCell) bCell.classList.add('called');
+
+                    selectedCartels.forEach(cardNum => {
+                        let activeCell = document.getElementById(`card-${cardNum}-num-${n}`);
+                        if (activeCell) activeCell.classList.add('marked');
+                    });
+                });
+
+                let totalDerash = playersCount * 8;
+                for (let cardNum of selectedCartels) {
+                    let activeCard = generateBingoCard(cardNum);
+                    let cardNumbersList = [];
+                    for (let row = 0; row < 5; row++) {
+                        ['B','I','N','G','O'].forEach(col => {
+                            let val = activeCard[col][row];
+                            if(val !== 'FREE') cardNumbersList.push(val);
+                        });
+                    }
+                    if (cardNumbersList.every(n => calledNumbers.includes(n))) {
+                        triggerAutoWin(cardNum, totalDerash);
+                        break;
+                    }
+                }
+            }
+        }
+
+        let disqualified = false;
+        function checkManualBingo() {
+            if (disqualified) {
+                alert('❌ ካርቴላዎ ቀደም ሲል ስለታሰረ (Disqualified) መጫወት አይችሉም!');
+                return;
+            }
+
+            let elapsed = Math.floor((Date.now() - parseInt(serverStartTime)) / 1000);
+            let calledNumbers = getMasterCalledNumbers(elapsed);
+            let totalDerash = playersCount * 8;
+            let wonCard = null;
+
+            for (let cardNum of selectedCartels) {
+                let activeCard = generateBingoCard(cardNum);
+                let cardNumbersList = [];
+                for (let row = 0; row < 5; row++) {
+                    ['B','I','N','G','O'].forEach(col => {
+                        let val = activeCard[col][row];
+                        if(val !== 'FREE') cardNumbersList.push(val);
+                    });
+                }
+                if (cardNumbersList.every(n => calledNumbers.includes(n))) {
+                    wonCard = cardNum;
+                    break;
+                }
+            }
+
+            if (wonCard !== null) {
+                triggerAutoWin(wonCard, totalDerash);
+            } else {
+                disqualified = true;
+                alert('⚠️ የተሳሳተ BINGO (False Bingo)! ካርቴላዎ ታስሯል (Disqualified)። ጨዋታው ግን ይቀጥላል!');
+            }
+        }
+
+        function triggerAutoWin(cartelNum, totalDerash) {
+            document.getElementById('winnerMessage').innerHTML = `🎉 <b>ኮንግራ! (Congra)</b><br><br>ካርቴላ ቁጥር <b>#${cartelNum}</b> ጨዋታውን በድል ዘግቷል!<br><br>💰 ያሸነፉት ደራሽ: <b>${totalDerash} ብር</b>`;
+            document.getElementById('winnerModal').style.display = 'flex';
+        }
+
+        function resetNewGame() {
+            localStorage.removeItem('bingo_start_time');
+            localStorage.removeItem('bingo_players');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
