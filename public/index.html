@@ -24,46 +24,51 @@
             margin-bottom: 8px;
             font-size: 11px;
             align-items: center;
+            position: relative;
         }
         .top-bar div div:last-child { font-weight: bold; color: #facc15; }
 
-        /* Menu Button Style */
+        /* Telegram Style Clean Menu Button */
         .menu-btn {
-            background: #334155;
-            color: #38bdf8;
-            border: 1px solid #0284c7;
-            padding: 3px 6px;
-            border-radius: 4px;
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        /* Slide-out or Popup Menu (Like Image 2) */
+        /* Modern Telegram Popup Menu */
         #menuDropdown {
             display: none;
             position: absolute;
-            top: 45px;
-            left: 10px;
+            top: 42px;
+            left: 6px;
             background: #1e293b;
-            border: 2px solid #0284c7;
-            border-radius: 8px;
-            width: 180px;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            width: 200px;
             z-index: 300;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+            overflow: hidden;
         }
         .menu-item {
-            padding: 10px 12px;
-            font-size: 11px;
+            padding: 12px 14px;
+            font-size: 12px;
             border-bottom: 1px solid #334155;
             cursor: pointer;
             color: #f8fafc;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         .menu-item:last-child { border-bottom: none; }
-        .menu-item:hover { background: #334155; color: #facc15; }
+        .menu-item:hover { background: #334155; color: #38bdf8; }
 
         .game-container {
             display: flex;
@@ -184,4 +189,277 @@
         }
 
         .btn {
-            background: #02
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .timer-box {
+            background: #f59e0b;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* Deposit Modal */
+        #depositModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .modal-box {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #38bdf8;
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+        }
+        .modal-box input {
+            width: 100%;
+            padding: 8px;
+            margin: 6px 0;
+            border-radius: 4px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            box-sizing: border-box;
+            font-size: 12px;
+        }
+
+        /* Winner Modal */
+        #winnerModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div><button class="menu-btn" onclick="toggleMenu()">☰ Menu</button></div>
+        <div><div>WALLET</div><div id="walletDisplay" style="color: #38bdf8; cursor:pointer;" onclick="openDepositModal()">0 ብር ➕</div></div>
+        <div><div>DERASH</div><div id="derashPool">0 ETB</div></div>
+        <div class="timer-box" id="timerDisplay">40 s</div>
+
+        <div id="menuDropdown">
+            <div class="menu-item" onclick="openDepositModal(); toggleMenu();">💳 ዲፖዚት (Deposit)</div>
+            <div class="menu-item" onclick="alert('የጨዋታ ደንብ: ካርቴላ ይምረጡ፣ ቁጥር ይጠበቁ፣ BINGO ይበሉ!'); toggleMenu();">📜 የጨዋታ ደንቦች</div>
+            <div class="menu-item" onclick="alert('ድጋፍ ለማግኘት በቴሌግራም ያግኙን: @Support'); toggleMenu();">📞 የደንበኞች ድጋፍ</div>
+            <div class="menu-item" onclick="resetNewGame()">🔄 ሪፍሬሽ / ሪስታርት</div>
+        </div>
+    </div>
+
+    <div id="selectionView">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="font-size: 11px; color: #38bdf8;">ካርቴላ ይምረጡ (ከ 1 እስከ 400 - እስከ 3)</div>
+            <button onclick="openDepositModal()" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer;">ዲፖዚት (Deposit)</button>
+        </div>
+        <div class="selection-grid-container">
+            <div class="sel-grid" id="selectionGrid"></div>
+        </div>
+        
+        <div class="cartel-preview" style="margin-top: 6px;">
+            <div id="cartelTitle" style="font-size: 10px; color: #94a3b8;">ካርቴላ # -</div>
+            <div class="bingo-table" id="previewTable"></div>
+        </div>
+
+        <button class="btn" style="margin-top: 6px;" onclick="confirmCards()">ካርቴላ 🔒 (10 ብር)</button>
+    </div>
+
+    <div id="gameView" class="game-container" style="display: none;">
+        <div class="left-board">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; color: #38bdf8;">
+                <span>የተጠራው: <b id="currentCalledNum" style="color: #facc15; font-size: 14px;">-</b></span>
+                <span id="calledCount">0/75</span>
+            </div>
+            
+            <div class="bingo-board-grid" id="bingoBoardGrid"></div>
+        </div>
+
+        <div class="right-panel" id="activeCardsPanel">
+            <button class="btn" style="background: #10b981; margin-bottom: 4px;" onclick="checkManualBingo()">🎉 BINGO!</button>
+        </div>
+    </div>
+
+    <div id="depositModal">
+        <div class="modal-box">
+            <h3 style="color: #facc15; margin-top: 0; font-size: 14px;">💳 የገንዘብ ማስቀመጫ (Deposit)</h3>
+            <p style="font-size: 11px; color: #cbd5e1; text-align: left; margin: 5px 0;">
+                ይህንን አካውንት በመጠቀም ከ<b>20 ብር</b> ጀምሮ ያስገቡ:<br>
+                🏦 <b>ባንክ/ቴሌብር:</b> 0934664761<br>
+                👤 <b>ስም:</b> ፋጡማ ኢብራሂም
+            </p>
+            <input type="number" id="depositAmount" placeholder="ያስገቡት መጠን (ብር) - ከ 20 ጀምሮ" min="20">
+            <input type="text" id="receiptRef" placeholder="የደረሰኝ ማረጋገጫ ቁጥር (Txn ID) ያስገቡ">
+            <button class="btn" style="background: #10b981; margin-top: 8px;" onclick="submitDeposit()">ዲፖዚት ላክ</button>
+            <button class="btn" style="background: #64748b; margin-top: 4px;" onclick="closeDepositModal()">ተመለስ</button>
+        </div>
+    </div>
+
+    <div id="winnerModal">
+        <div class="modal-box" style="border-color: #facc15;">
+            <h2 id="modalTitle" style="color: #facc15; margin-top: 0;">🏆 BINGO WINNER!</h2>
+            <p id="winnerMessage" style="font-size: 12px; line-height: 1.5;"></p>
+            <button class="btn" onclick="resetNewGame()" style="background: #10b981; margin-top: 10px;">ቀጣይ ጨዋታ ጀምር</button>
+        </div>
+    </div>
+
+    <script>
+        let serverStartTime = localStorage.getItem('bingo_start_time');
+        const gameDuration = 40; 
+        const callInterval = 3;  
+        
+        if (!serverStartTime || Date.now() - parseInt(serverStartTime) > (45 + 75 * callInterval) * 1000) {
+            serverStartTime = Date.now().toString();
+            localStorage.setItem('bingo_start_time', serverStartTime);
+            localStorage.setItem('bingo_players', '0');
+        }
+
+        let selectedCartels = [];
+        let playersCount = parseInt(localStorage.getItem('bingo_players') || '0');
+        let playWallet = parseInt(localStorage.getItem('bingo_wallet') || '0');
+        let gameStarted = false;
+        const totalCards = 400;
+
+        document.getElementById('walletDisplay').innerText = playWallet + " ብር ➕";
+        document.getElementById('derashPool').innerText = (playersCount * 8) + " ETB";
+
+        function toggleMenu() {
+            let menu = document.getElementById('menuDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.menu-btn') && !event.target.closest('#menuDropdown')) {
+                document.getElementById('menuDropdown').style.display = 'none';
+            }
+        }
+
+        function openDepositModal() {
+            document.getElementById('depositModal').style.display = 'flex';
+        }
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+
+        function submitDeposit() {
+            let amount = parseInt(document.getElementById('depositAmount').value);
+            let receipt = document.getElementById('receiptRef').value.trim();
+
+            if (isNaN(amount) || amount < 20) {
+                alert('❌ ቢያንስ 20 ብር እና ከዚያ በላይ ማስገባት ይኖርብዎታል!');
+                return;
+            }
+            if (!receipt) {
+                alert('❌ እባክዎን የደረሰኝ ማረጋገጫ ቁጥር (Receipt/Txn ID) ያስገቡ!');
+                return;
+            }
+
+            playWallet += amount;
+            localStorage.setItem('bingo_wallet', playWallet);
+            document.getElementById('walletDisplay').innerText = playWallet + " ብር ➕";
+            closeDepositModal();
+            alert(`✅ ዲፖዚትዎ በትክክል ተረጋግጧል! <b>${amount} ብር</b> ወደ ዋሌትዎ ገብቷል።`);
+        }
+
+        // Build Selection Grid
+        const selGrid = document.getElementById('selectionGrid');
+        for (let i = 1; i <= totalCards; i++) {
+            let cell = document.createElement('div');
+            cell.className = 'sel-cell';
+            cell.id = `sel-${i}`;
+            cell.innerText = i;
+            cell.onclick = () => selectCard(i);
+            selGrid.appendChild(cell);
+        }
+
+        function generateBingoCard(seed) {
+            let card = { B: [], I: [], N: [], G: [], O: [] };
+            let rand = (min, max) => Math.floor(Math.abs(Math.sin(seed++) * 10000)) % (max - min + 1) + min;
+            let getUniqueCols = (min, max, count) => {
+                let nums = [];
+                while(nums.length < count) {
+                    let n = rand(min, max);
+                    if(!nums.includes(n)) nums.push(n);
+                }
+                return nums.sort((a,b)=>a-b);
+            };
+            card.B = getUniqueCols(1, 15, 5);
+            card.I = getUniqueCols(16, 30, 5);
+            card.N = getUniqueCols(31, 45, 4);
+            card.N.splice(2, 0, 'FREE');
+            card.G = getUniqueCols(46, 60, 5);
+            card.O = getUniqueCols(61, 75, 5);
+            return card;
+        }
+
+        function getMasterCalledNumbers(elapsedSeconds) {
+            let startTimestamp = parseInt(serverStartTime);
+            let nums = Array.from({length: 75}, (_, i) => i + 1);
+            let seed = startTimestamp;
+            for (let i = nums.length - 1; i > 0; i--) {
+                seed = (seed * 9301 + 49297) % 233280;
+                let j = Math.floor((seed / 233280) * (i + 1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+            let activeCallsCount = Math.max(0, Math.floor((elapsedSeconds - gameDuration) / callInterval));
+            return nums.slice(0, Math.min(75, activeCallsCount));
+        }
+
+        function selectCard(num) {
+            if (gameStarted) return;
+            let idx = selectedCartels.indexOf(num);
+            if (idx > -1) {
+                selectedCartels.splice(idx, 1);
+                document.getElementById(`sel-${num}`).classList.remove('active');
+            } else {
+                if (selectedCartels.length >= 3) {
+                    alert('በአንድ ጨዋታ እስከ 3 ካርቴላ ብቻ መምረጥ ይችላሉ!');
+                    return;
+                }
+                selectedCartels.push(num);
+                document.getElementById(`sel-${num}`).classList.add('active');
+            }
+            updatePreview(num);
+        }
+
+        function updatePreview(num) {
+            document.getElementById('cartelTitle').innerText = `ካርቴላ #${num}`;
+            let previewTable = document.getElementById('previewTable');
+            previewTable.innerHTML = '';
+            ['B','I','N','G','O'].forEach(h => {
+                let th = document.createElement('div');
+                th.className = 'bingo-header';
+                th.innerText = h;
+                previewTable.appendChild(th);
+            });
+            let cardData = generateBingoCard(num);
+            for (let row = 0; row < 5; row++) {
+                ['B','I','N','G','O'].forEach(col => {
+                    let cCell = document.createElement('div');
+                    let val = cardData[col][row];
+                    cCell.className = val === 'FREE' ? 'bingo-cell free' : 'bingo-cell';
+                    cCell.innerText = val
